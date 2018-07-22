@@ -1,0 +1,24 @@
+{
+  "name": "storefront",
+  "version": "1.0.0",
+  "description": "An amazon-like storefront using Node.js and MYSQL",
+  "main": "bamazon.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonfelipe/storefront.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jasonfelipe/storefront/issues"
+  },
+  "homepage": "https://github.com/jasonfelipe/storefront#readme",
+  "dependencies": {
+    "inquire": "^0.4.8",
+    "inquirer": "^6.0.0",
+    "mysql": "^2.16.0"
+  }
+}
