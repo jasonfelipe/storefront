@@ -1,6 +1,10 @@
 var mysql = require('mysql');
 var inquirer = require('inquirer');
 
+//For cleaner tables
+var { table } = require('table');
+
+
 var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
@@ -13,29 +17,87 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
     console.log("Connected as id: " + connection.threadId);
     console.log(
-        '\nHello, welcome to the shop!\nThis is what we have in stock!' 
+        '\nHello, welcome to the shop!\nThis is what we have in stock!\n'
     );
     showStock();
     purchaseItem();
 
 });
 
-var showStock = function (){
-    connection.query('SELECT * FROM products', function (err, res){
-        for (var i = 0; i < res.length; i++){
-            console.log('\nID' + '        | ' + 'Product Name' + '        | ' + 'Department Name')
-            console.log(res[i].item_id + "         | " + res[i].product_name + ' | ' + res[i].department_name)
-        }
+
+//Shows the stock
+var showStock = function () {
+    connection.query('SELECT * FROM products', function (err, res) {
+
+        // let config,
+        //     data,
+        //     output;
+        // data = [
+        //     ['Item ID', 'Product Name', 'Department Name', 'Price', 'Stock Quantity'],
+        //     []
+        // ];
+        // config = {
+        //     columns: {
+        //         1: {
+        //             width: 20,
+        //             wordWrap: true
+        //         }
+        //     }
+        // };
+
+        // output = table(data, config);
+        // console.log(output);
+
+        res.forEach(function (i) {
+            let id = i.item_id,
+                product = i.product_name,
+                department = i.department_name,
+                price = i.price,
+                quantity = i.stock_quantity;
+
+
+            let config,
+                data,
+                output;
+            data = [
+                ['Item ID', 'Product Name', 'Department Name', 'Price', 'Stock Quantity'],
+                [id, product, department, price, quantity]
+            ];
+            config = {
+                columns: {
+                    1: {
+                        width: 20,
+                        wordWrap: true
+                    }
+                }
+            };
+
+            output = table(data, config);
+            console.log(output);
+
+            // data[1][0].push(id);
+            // data[1][1].push(product);
+            // data[1][2].push(department);
+            // data[1][3].push(price);
+            // data[1][4].push(quantity);
+
+            // console.log(id + '|' + product + '|' + department + '|' + price + '|' + quantity + "\n");
+
+        });
+
+
     });
+
 }
 
-var purchaseItem = function (){
+
+//Purchase Item 
+var purchaseItem = function () {
     connection.query("SELECT * FROM products", function (err, res) {
-        console.log(res);
         inquirer.prompt({
             name: 'choice',
             type: 'rawlist',
-            choices: function (value) {
+            choices: function () {
                 var choiceArray = [];
 
                 //Takes the response array, loops them, and them pushes it into the choices array.
@@ -44,19 +106,19 @@ var purchaseItem = function (){
                 }
                 return choiceArray;
             },
-            message: "What would you like to purchase?"
+            message: "What would you like to purchase? (Input Item ID)"
 
             //Remember, 'answer' is the inquire answers the user made and is an object.
-        }).then(function (answer) {
+        }).then(function (chosenProduct) {
             for (var i = 0; i < res.length; i++) {
-                if (res[i].product_name == answer.choice) {
+                if (res[i].product_name == chosenProduct.choice) {
 
-                    //Once we chose an auction we store it here.
+                    //Once we chose a product we store it here.
                     var chosenItem = res[i];
 
                     //And then we prompt them again.
                     inquirer.prompt({
-                        name: 'purchase',
+                        name: 'quantity',
                         type: 'input',
                         message: "How much would you like to purchase?",
 
@@ -68,24 +130,43 @@ var purchaseItem = function (){
                                 return false;
                             }
                         }
-                    }).then(function (answer) {
+                    }).then(function (purchasedQuantity) {
 
-                        //checks if the input number is less than than the current highest bid
-                        if (chosenItem.stock_quantity > parseInt(answer.purchase)) {
+                        //checks if the input number is less or equal than the current stock
+                        if (chosenItem.stock_quantity >= parseInt(purchasedQuantity.quantity)) {
+                            //asks for confirmation
+                            inquirer.prompt({
+                                name: 'confirm',
+                                type: 'confirm',
+                                message: 'Are you sure you want to buy ' + purchasedQuantity.quantity + " " + chosenItem.product_name + "(s)?"
+                            }).then(function (confirmation) {
 
-                            //if it's higher than the database is updated
-                            connection.query('UPDATE auctions SET ? WHERE ?', [{
-                                highestbid: chosenItem.stock_quantity - answer.purchase 
-                            }, {
-                                item_id: chosenItem.id
-                            }], function (err, res) {
-                                console.log("Purchase successfully placed!");
-                                purchaseItem();
+                                if (confirmation.confirm) {
+                                    parsedPurchase = parseInt(purchasedQuantity.quantity);
+
+                                    //Updates our stock
+                                    connection.query('UPDATE products SET ? WHERE ?', [{
+                                        stock_quantity: chosenItem.stock_quantity -= parsedPurchase
+                                    }, {
+                                        item_id: chosenItem.item_id
+                                    }], function (err, res) {
+                                        showStock();
+                                        purchaseItem();
+                                        console.log("\nPurchase successful!\n");
+                                    });
+
+                                }
+                                else {
+                                    console.log("Backing out of purchase...")
+                                    purchaseItem();
+                                }
                             });
+
                         } else {
                             console.log("Sorry we don't have enough... Try again...");
                             purchaseItem();
                         }
+
                     })
                 }
             }
