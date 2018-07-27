@@ -24,38 +24,134 @@ const managerMenu = function () {
     inquirer.prompt({
         name: 'managerChoice',
         type: 'list',
-        choices: ['Edit Current Stock', 'Add New Item'],
+        choices: ['Edit Current Stock', 'Add New Item', 'Delete Item'],
         message: 'What would you like to do?'
     }).then(function (menuChoice) {
         if (menuChoice.managerChoice === 'Edit Current Stock') {
             editStock();
         }
-        else {
+        if (menuChoice.managerChoice === 'Add New Item') {
             addItem();
+        }
+        if (menuChoice.managerChoice === 'Delete Item') {
+            deleteItem();
         }
     });
 };
 
-const addItem = function () {
-    console.log("This will add an item");
+const deleteItem = function () {
     inquirer.prompt({
-        name:'itemName',
-        type:'input',
-        message: "Please input the Item's name.",
-    },{
-        name:'itemDepartment',
-        type:'input',
-        message: "Please input the Item's Department name.",
-    },{
-        name:'itemQuantity',
-        type:'input',
-        message: "Please input the Item's quantity (NUMBER).",
-    },{
-        name:'itemPrice',
-        type:'input',
-        message: "Please input the Item's price (NUMBER WITH DECIMAL).",
-    }).then(function(item){
+        name: 'itemId',
+        type: 'input',
+        message: "Please input the Item's ID.",
+    }).then(function (id) {
+        connection.query('SELECT * FROM bamazon.products WHERE ?',
+            {
+                item_id: id.itemId
+            },
 
+            function (err, res) {
+                console.log(
+                    "\nItem ID: " + res[0].item_id,
+                    "\nProduct Name: " + res[0].product_name,
+                    "\nDepartment Name: " + res[0].department_name,
+                    "\nItem Price: " + res[0].price,
+                    "\nItem Quantity: " + res[0].stock_quantity
+                );
+            });
+        inquirer.prompt({
+            name: 'itemDelete',
+            type: 'confirm',
+            message: "Are you sure you want to delete this item from the database?",
+        }).then(function (deleteConfirmation) {
+            if (deleteConfirmation.itemDelete) {
+                inquirer.prompt({
+                    name: 'sureConfirm',
+                    type: 'confirm',
+                    message: 'ARE YOU SURE YOU WANT TO DO THIS? (CANNOT UNDUE AFTER THIS)'
+                }).then(function (absoluteConfirm) {
+                    if (absoluteConfirm.sureConfirm) {
+                        connection.query(
+                            "DELETE FROM products WHERE ?",
+                            {
+                                item_id: id.itemId
+                            },
+                            function (err, res) {
+                                console.log("\n\nProduct Deleted\n\n");
+                                showStock();
+                                managerMenu();
+                            }
+                        );
+                    }
+                    else {
+                        console.log("\nCancelling... \nGoing back to main menu...");
+                        showStock();
+                        managerMenu();
+                    }
+                });
+            }
+            else {
+                console.log("\nCancelling... \nGoing back to main menu...");
+                showStock();
+                managerMenu();
+            }
+        });
+    });
+
+}
+
+
+const addItem = function () {
+    inquirer.prompt([
+        {
+            name: 'itemName',
+            type: 'input',
+            message: "Please input the Item's name.",
+        }, {
+            name: 'itemDepartment',
+            type: 'input',
+            message: "Please input the Item's Department name.",
+        }, {
+            name: 'itemQuantity',
+            type: 'input',
+            message: "Please input the Item's quantity (NUMBER).",
+        }, {
+            name: 'itemPrice',
+            type: 'input',
+            message: "Please input the Item's price (NUMBER WITH DECIMAL).",
+        }
+    ]).then(function (item) {
+        inquirer.prompt({
+            name: 'itemConfirm',
+            type: 'confirm',
+            message: "Your item is:\n\nItem Name: " + item.itemName + "\nItem Department: " +
+                item.itemDepartment + "\nItem Quantity: " + item.itemQuantity
+                + "\nItem Price: " + item.itemPrice +
+                "\n\nIs this correct?"
+        }).then(function (addItemConfirmation) {
+            if (addItemConfirmation.itemConfirm) {
+                console.log("Your item will be added...");
+                connection.query('INSERT INTO products SET ?',
+                    {
+                        product_name: item.itemName,
+                        department_name: item.itemDepartment,
+                        price: item.itemPrice,
+                        stock_quantity: item.itemQuantity
+
+                    },
+                    function (err, res) {
+                        console.log(res.affectedRows + " product inserted!\n");
+                        showStock();
+                    }
+                )
+                managerMenu();
+            }
+            else {
+                console.log("\nCancelling... \nGoing back to main menu...");
+                showStock();
+                managerMenu();
+            }
+        });
 
     });
 };
