@@ -16,9 +16,50 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
     console.log("Connected as id: " + connection.threadId);
     showStock();
-    editStock();
+    managerMenu();
 
 });
+
+const managerMenu = function () {
+    inquirer.prompt({
+        name: 'managerChoice',
+        type: 'list',
+        choices: ['Edit Current Stock', 'Add New Item'],
+        message: 'What would you like to do?'
+    }).then(function (menuChoice) {
+        if (menuChoice.managerChoice === 'Edit Current Stock') {
+            editStock();
+        }
+        else {
+            addItem();
+        }
+    });
+};
+
+const addItem = function () {
+    console.log("This will add an item");
+    inquirer.prompt({
+        name:'itemName',
+        type:'input',
+        message: "Please input the Item's name.",
+    },{
+        name:'itemDepartment',
+        type:'input',
+        message: "Please input the Item's Department name.",
+    },{
+        name:'itemQuantity',
+        type:'input',
+        message: "Please input the Item's quantity (NUMBER).",
+    },{
+        name:'itemPrice',
+        type:'input',
+        message: "Please input the Item's price (NUMBER WITH DECIMAL).",
+    }).then(function(item){
+
+
+    });
+};
+
 
 const showStock = function () {
     connection.query('SELECT * FROM products', function (err, res) {
@@ -67,7 +108,7 @@ const showStock = function () {
             };
 
             output = table(data, config);
-            console.log(output);
+            console.log("\n" + output);
 
             // data[1][0].push(id);
             // data[1][1].push(product);
@@ -140,7 +181,7 @@ const editStock = function () {
                                         "Error: Not enough stock to take!\n" +
                                         "Backing out of edit...\n"
                                     );
-                                    editStock();
+                                    managerMenu();
                                 } else {
                                     parsedNumber = parseInt(editedQuantity.quantity);
 
@@ -151,7 +192,7 @@ const editStock = function () {
                                         item_id: chosenItem.item_id
                                     }], function (err, res) {
                                         showStock();
-                                        editStock();
+                                        managerMenu();
                                         console.log("\nEdit successful!\n");
                                     });
 
