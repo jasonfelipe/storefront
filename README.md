@@ -49,8 +49,10 @@ Inquirer has a weird bug where the question is at the top until a key is pressed
 
 #### Jason Felipe 
 
-..* github - https://github.com/jasonfelipe 
-..* linkedin - https://www.linkedin.com/in/jason-felipe-089558107/ 
+* github page - https://github.com/jasonfelipe 
+
+* linkedin page - https://www.linkedin.com/in/jason-felipe-089558107/ 
+
 
 
 ### Acknowledgements
