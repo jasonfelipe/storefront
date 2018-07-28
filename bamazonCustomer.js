@@ -131,7 +131,6 @@ var purchaseItem = function () {
                             }
                         }
                     }).then(function (purchasedQuantity) {
-
                         //checks if the input number is less or equal than the current stock
                         if (chosenItem.stock_quantity >= parseInt(purchasedQuantity.quantity)) {
                             //asks for confirmation
@@ -140,21 +139,50 @@ var purchaseItem = function () {
                                 type: 'confirm',
                                 message: 'Are you sure you want to buy ' + purchasedQuantity.quantity + " " + chosenItem.product_name + "(s)?"
                             }).then(function (confirmation) {
-
                                 if (confirmation.confirm) {
                                     parsedPurchase = parseInt(purchasedQuantity.quantity);
 
-                                    //Updates our stock
-                                    connection.query('UPDATE products SET ? WHERE ?', [{
-                                        stock_quantity: chosenItem.stock_quantity -= parsedPurchase
-                                    }, {
-                                        item_id: chosenItem.item_id
-                                    }], function (err, res) {
-                                        showStock();
-                                        purchaseItem();
-                                        console.log("\nPurchase successful!\n");
-                                    });
 
+
+
+                                    //Added code please make this work.
+                                    connection.query('SELECT * FROM products WHERE ?', {
+                                        item_id: chosenProduct.choice
+                                    }, 
+                                    function(err,res){
+                                        console.log(
+                                            "\n\nYour Current Order is: " + 
+                                            "\nProduct Name: " +chosenItem.product_name +
+                                            "\nQuantity: " + parsedPurchase +
+                                            "\n\nTOTAL PRICE: " + chosenItem.price * parsedPurchase
+                                        );
+                                    });
+                                    inquirer.prompt({
+                                        name: 'finalConfirm',
+                                        type: 'confirm',
+                                        message: '\nPlease confirm your purchase.'
+                                    }).then(function(updateDatabase){
+                                        //end added code
+
+
+
+                                        if(updateDatabase.finalConfirm){
+                                                //Updates our stock
+                                                connection.query('UPDATE products SET ? WHERE ?', [{
+                                                    stock_quantity: chosenItem.stock_quantity -= parsedPurchase
+                                                }, {
+                                                    item_id: chosenItem.item_id
+                                                }], function (err, res) {
+                                                    showStock();
+                                                    purchaseItem();
+                                                    console.log("\nPurchase successful!\n");
+                                                });
+                                        }
+                                        else{
+                                            console.log("Backing out of purchase...")
+                                            purchaseItem();
+                                        }
+                                    });
                                 }
                                 else {
                                     console.log("Backing out of purchase...")
@@ -173,3 +201,4 @@ var purchaseItem = function () {
         });
     });
 }
+                                    
