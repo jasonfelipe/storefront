@@ -1,4 +1,6 @@
 # Bamazon Storefront
+link to project - https://github.com/jasonfelipe/storefront 
+
 An amazon-like storefront using Node.js and MYSQL. 
 
 Has two files, bamazonCustomer.js and bamazonManager.js 
@@ -12,8 +14,7 @@ Please have your own MYSQL database to use this app.
 
 Please name your MYSQL database 'bamazon' and put in your existing details in... Example: 
 
-```.js```` 
-
+```.js 
 var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
@@ -22,6 +23,7 @@ var connection = mysql.createConnection({
     database: 'bamazon'
 
 }); 
+```
 
 Make sure your database has values or add items with manager app. 
 Once you have the database in the js files, you can run either files with node. 
