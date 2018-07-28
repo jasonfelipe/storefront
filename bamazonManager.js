@@ -140,7 +140,7 @@ const addItem = function () {
 
                     },
                     function (err, res) {
-                        console.log(res.affectedRows + " product inserted!\n");
+                        console.log("\n\nProduct inserted!\n");
                         showStock();
                     }
                 )
